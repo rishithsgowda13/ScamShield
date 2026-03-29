@@ -46,6 +46,32 @@ export async function scanUrl(url: string) {
       console.log('IP resolution or Threat Intel failed', e);
     }
     
+    // URLhaus Malware URL API
+    let urlhausFlags: string[] = [];
+    let isUrlhausMalicious = false;
+    try {
+      const formBody = new URLSearchParams();
+      formBody.append('url', url);
+      
+      const uhReq = await fetch('https://urlhaus-api.abuse.ch/v1/url/', {
+        method: 'POST',
+        headers: {
+          'Auth-Key': '771ff3036eb5105553f3587798a049f73d7fd534cde1125e',
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formBody
+      });
+      const uhRes = await uhReq.json();
+      if (uhRes.query_status === 'ok') {
+         isUrlhausMalicious = true;
+         urlhausFlags.push(`URLhaus: Known Malware URL (${uhRes.threat})`);
+      } else {
+         urlhausFlags.push('URLhaus: URL not in malware database');
+      }
+    } catch(e) {
+       console.log('URLhaus failed', e);
+    }
+    
     if (!searchReq.ok) {
        throw new Error('API Request Failed');
     }
@@ -54,30 +80,30 @@ export async function scanUrl(url: string) {
 
     if (searchRes.results && searchRes.results.length > 0) {
       const latest = searchRes.results[0];
-      const isMalicious = latest.verdicts?.overall?.malicious || latest.page?.status === 404 || isMaliciousIp;
+      const isMalicious = latest.verdicts?.overall?.malicious || latest.page?.status === 404 || isMaliciousIp || isUrlhausMalicious;
       const combinedFlags = isMalicious 
-          ? ['Malicious History Detected', 'High Risk Domain', ...abuseFlags] 
-          : ['Domain Verified Safe', ...abuseFlags];
+          ? ['Malicious History Detected', 'High Risk Domain', ...abuseFlags, ...urlhausFlags] 
+          : ['Domain Verified Safe', ...abuseFlags, ...urlhausFlags];
       
       return {
         status: isMalicious ? 'danger' : 'safe',
         score: isMalicious ? Math.max(98, threatScore) : 12,
         flags: combinedFlags,
-        engine: 'urlscan.io & AbuseIPDB (LIVE)'
+        engine: 'urlscan + AbuseIPDB + URLhaus (LIVE)'
       };
     } else {
       // Basic heuristic fallback if domain hasn't been scanned on urlscan yet
-      const isSus = url.toLowerCase().includes('bit.ly') || url.toLowerCase().includes('free') || url.toLowerCase().includes('win') || isMaliciousIp;
+      const isSus = url.toLowerCase().includes('bit.ly') || url.toLowerCase().includes('free') || url.toLowerCase().includes('win') || isMaliciousIp || isUrlhausMalicious;
       
       const heuristicFlags = isSus 
-          ? ['High Risk Keyword/IP', ...abuseFlags] 
-          : ['No Malicious History Found', ...abuseFlags];
+          ? ['High Risk Keyword/IP/URL', ...abuseFlags, ...urlhausFlags] 
+          : ['No Malicious History Found', ...abuseFlags, ...urlhausFlags];
           
       return {
         status: isSus ? 'danger' : 'safe',
         score: isSus ? Math.max(85, threatScore) : 15,
         flags: heuristicFlags,
-        engine: 'AbuseIPDB & Heuristics (LIVE)'
+        engine: 'AbuseIPDB/URLhaus + Heuristics (LIVE)'
       };
     }
   } catch (error) {
