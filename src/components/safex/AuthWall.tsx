@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Mail, Lock, User, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function AuthWall({ onLogin }: { onLogin: () => void }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,15 +12,32 @@ export default function AuthWall({ onLogin }: { onLogin: () => void }) {
   const [isBotChecked, setIsBotChecked] = useState(false);
   const [checkingBot, setCheckingBot] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isBotChecked) return;
     setLoading(true);
-    // Simulate real auth validation API call
-    setTimeout(() => {
-      setLoading(false);
-      onLogin(); // grant access
-    }, 1500);
+    setAuthError('');
+    
+    if (isLogin) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setAuthError(error.message);
+      else onLogin();
+    } else {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name } }
+      });
+      if (error) setAuthError(error.message);
+      else onLogin();
+    }
+    
+    setLoading(false);
   };
 
   const handleBotCheck = () => {
@@ -73,6 +91,8 @@ export default function AuthWall({ onLogin }: { onLogin: () => void }) {
                     <input 
                       required 
                       type="text" 
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
                       placeholder="Agent Name"
                       className="w-full bg-black/50 border border-white/10 rounded-xl h-14 pl-12 pr-4 text-white focus:border-[#00FF9D]/50 focus:outline-none transition-all placeholder:text-white/20"
                     />
@@ -88,6 +108,8 @@ export default function AuthWall({ onLogin }: { onLogin: () => void }) {
                 <input 
                   required 
                   type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="agent@nexus.com"
                   className="w-full bg-black/50 border border-white/10 rounded-xl h-14 pl-12 pr-4 text-white focus:border-[#00FF9D]/50 focus:outline-none transition-all placeholder:text-white/20"
                 />
@@ -101,6 +123,8 @@ export default function AuthWall({ onLogin }: { onLogin: () => void }) {
                 <input 
                   required 
                   type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full bg-black/50 border border-white/10 rounded-xl h-14 pl-12 pr-4 text-white focus:border-[#00FF9D]/50 focus:outline-none transition-all placeholder:text-white/20"
                 />
@@ -125,6 +149,12 @@ export default function AuthWall({ onLogin }: { onLogin: () => void }) {
                 </p>
               </div>
             </div>
+
+            {authError && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-center">
+                <p className="text-red-400 text-xs font-bold uppercase tracking-widest">{authError}</p>
+              </div>
+            )}
 
             <Button 
               type="submit"

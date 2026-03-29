@@ -3,10 +3,10 @@
 import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Shield, ShieldCheck, Award } from 'lucide-react';
+import { Shield, ShieldCheck, Award, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function Header() {
+export default function Header({ onLogout }: { onLogout?: () => void }) {
   const { language, setLanguage, t } = useLanguage();
 
   return (
@@ -59,6 +59,17 @@ export default function Header() {
             KN
           </Button>
         </div>
+
+        {onLogout && (
+          <Button 
+            variant="ghost"
+            onClick={onLogout}
+            className="flex items-center gap-2 border border-red-500/20 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs h-10 px-4 transition-all"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden md:inline">End Session</span>
+          </Button>
+        )}
       </div>
     </header>
   );

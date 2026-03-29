@@ -2,15 +2,29 @@
 
 import { useState } from 'react';
 import Header from '@/components/safex/Header';
+import Hero from '@/components/safex/Hero';
 import RealTimeDashboard from '@/components/safex/RealTimeDashboard';
+import Methodology from '@/components/safex/Methodology';
 import ProtectionSuite from '@/components/safex/ProtectionSuite';
 import ScamAwarenessModule from '@/components/safex/ScamAwarenessModule';
 import ImpactDashboard from '@/components/safex/ImpactDashboard';
 import AuthWall from '@/components/safex/AuthWall';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setIsAuthenticated(!!data.session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => setIsAuthenticated(!!session)
+    );
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <AnimatePresence mode="wait">
@@ -28,13 +42,16 @@ export default function Home() {
       <div className="fixed top-0 left-0 right-0 h-[500px] bg-[#00FF9D] opacity-[0.03] blur-[100px] -z-10" />
       <div className="fixed inset-0 bg-[#030303] -z-20" />
 
-      <Header />
+      <Header onLogout={() => supabase.auth.signOut()} />
+      
+      <Hero />
       
       <div className="flex-1 flex overflow-hidden">
         <RealTimeDashboard />
       </div>
 
       <div className="container mx-auto px-4 mt-20">
+        <Methodology />
         <ProtectionSuite />
         <ScamAwarenessModule />
         <ImpactDashboard />
