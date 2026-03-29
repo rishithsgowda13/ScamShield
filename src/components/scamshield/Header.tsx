@@ -16,16 +16,16 @@ export default function Header() {
           <Shield className="w-6 h-6 text-[#00FF9D]" />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tighter text-white">
+          <h1 className="text-2xl font-bold tracking-tighter text-white">
             Scam<span className="text-[#00FF9D]">Shield</span>
           </h1>
-          <p className="text-[10px] text-white/50 uppercase tracking-widest">{t('nexus')}</p>
+          <p className="text-[12px] text-white/70 uppercase tracking-widest">{t('nexus')}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-4">
-        <Badge variant="outline" className="hidden md:flex items-center gap-1 border-[#00FF9D]/20 bg-[#00FF9D]/5 text-[#00FF9D] font-mono">
-          <ShieldCheck className="w-3 h-3" />
+        <Badge variant="outline" className="hidden md:flex items-center gap-2 border-[#00FF9D]/20 bg-[#00FF9D]/5 text-[#00FF9D] font-mono text-xs py-1 px-3">
+          <ShieldCheck className="w-4 h-4" />
           {t('local_processing')}
         </Badge>
         
@@ -33,7 +33,7 @@ export default function Header() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`rounded-full h-8 px-3 text-xs ${language === 'en' ? 'bg-[#00FF9D]/20 text-[#00FF9D] hover:bg-[#00FF9D]/30 hover:text-[#00FF9D]' : 'text-white/60 hover:text-white'}`}
+            className={`rounded-full h-10 px-4 text-sm font-bold ${language === 'en' ? 'bg-[#00FF9D]/20 text-[#00FF9D] hover:bg-[#00FF9D]/30 hover:text-[#00FF9D]' : 'text-white/60 hover:text-white'}`}
             onClick={() => setLanguage('en')}
           >
             EN
@@ -41,7 +41,7 @@ export default function Header() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`rounded-full h-8 px-3 text-xs ${language === 'kn' ? 'bg-[#00FF9D]/20 text-[#00FF9D] hover:bg-[#00FF9D]/30 hover:text-[#00FF9D]' : 'text-white/60 hover:text-white'}`}
+            className={`rounded-full h-10 px-4 text-sm font-bold ${language === 'kn' ? 'bg-[#00FF9D]/20 text-[#00FF9D] hover:bg-[#00FF9D]/30 hover:text-[#00FF9D]' : 'text-white/60 hover:text-white'}`}
             onClick={() => setLanguage('kn')}
           >
             KN
