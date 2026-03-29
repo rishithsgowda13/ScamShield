@@ -1,12 +1,29 @@
+'use client';
+
+import { useState } from 'react';
 import Header from '@/components/safex/Header';
 import RealTimeDashboard from '@/components/safex/RealTimeDashboard';
 import ProtectionSuite from '@/components/safex/ProtectionSuite';
 import ScamAwarenessModule from '@/components/safex/ScamAwarenessModule';
 import ImpactDashboard from '@/components/safex/ImpactDashboard';
+import AuthWall from '@/components/safex/AuthWall';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   return (
-    <main className="min-h-screen relative overflow-x-hidden selection:bg-[#00FF9D]/30 selection:text-white flex flex-col">
+    <AnimatePresence mode="wait">
+      {!isAuthenticated ? (
+        <AuthWall key="auth" onLogin={() => setIsAuthenticated(true)} />
+      ) : (
+        <motion.main 
+          key="dashboard"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="min-h-screen relative overflow-x-hidden selection:bg-[#00FF9D]/30 selection:text-white flex flex-col"
+        >
       {/* Background Ambience */}
       <div className="fixed top-0 left-0 right-0 h-[500px] bg-[#00FF9D] opacity-[0.03] blur-[100px] -z-10" />
       <div className="fixed inset-0 bg-[#030303] -z-20" />
@@ -40,6 +57,8 @@ export default function Home() {
           </p>
         </div>
       </footer>
-    </main>
+    </motion.main>
+      )}
+    </AnimatePresence>
   );
 }
