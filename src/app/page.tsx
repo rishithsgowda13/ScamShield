@@ -1,6 +1,7 @@
 import Header from '@/components/scamshield/Header';
 import RealTimeDashboard from '@/components/scamshield/RealTimeDashboard';
 import ProtectionSuite from '@/components/scamshield/ProtectionSuite';
+import ScamAwarenessModule from '@/components/scamshield/ScamAwarenessModule';
 import ImpactDashboard from '@/components/scamshield/ImpactDashboard';
 
 export default function Home() {
@@ -18,6 +19,7 @@ export default function Home() {
 
       <div className="container mx-auto px-4 mt-20">
         <ProtectionSuite />
+        <ScamAwarenessModule />
         <ImpactDashboard />
       </div>
 
