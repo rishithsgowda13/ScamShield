@@ -1,20 +1,22 @@
 import Header from '@/components/scamshield/Header';
-import Hero from '@/components/scamshield/Hero';
+import RealTimeDashboard from '@/components/scamshield/RealTimeDashboard';
 import ProtectionSuite from '@/components/scamshield/ProtectionSuite';
 import ImpactDashboard from '@/components/scamshield/ImpactDashboard';
 
 export default function Home() {
   return (
-    <main className="min-h-screen relative overflow-x-hidden selection:bg-[#00FF9D]/30 selection:text-white">
+    <main className="min-h-screen relative overflow-x-hidden selection:bg-[#00FF9D]/30 selection:text-white flex flex-col">
       {/* Background Ambience */}
       <div className="fixed top-0 left-0 right-0 h-[500px] bg-[#00FF9D] opacity-[0.03] blur-[100px] -z-10" />
-      <div className="fixed bottom-0 right-0 w-[400px] h-[400px] bg-[#FF3B3B] opacity-[0.02] blur-[100px] -z-10" />
       <div className="fixed inset-0 bg-[#030303] -z-20" />
 
       <Header />
       
-      <div className="container mx-auto px-4">
-        <Hero />
+      <div className="flex-1 flex overflow-hidden">
+        <RealTimeDashboard />
+      </div>
+
+      <div className="container mx-auto px-4 mt-20">
         <ProtectionSuite />
         <ImpactDashboard />
       </div>
