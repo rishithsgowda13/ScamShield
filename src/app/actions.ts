@@ -1,5 +1,7 @@
 'use server';
 
+import dns from 'dns/promises';
+
 export async function scanUrl(url: string) {
   try {
     // The API key provided by the user
@@ -18,6 +20,32 @@ export async function scanUrl(url: string) {
       next: { revalidate: 0 } // no cache
     });
     
+    // ABIUSE IPDB Threat Intel API
+    const threatKey = '7258cf9d0be9af2b8409dff5574edec4464f5b1bd23163c54d0426f727d848b36f347100bd9f97fd';
+    let abuseFlags: string[] = [];
+    let isMaliciousIp = false;
+    let threatScore = 0;
+    try {
+      const addresses = await dns.resolve4(searchUrl);
+      if (addresses.length > 0) {
+        const ipReq = await fetch(`https://api.abuseipdb.com/api/v2/check?ipAddress=${addresses[0]}&maxAgeInDays=90`, {
+          headers: { 'Key': threatKey, 'Accept': 'application/json' }
+        });
+        const ipRes = await ipReq.json();
+        if (ipRes?.data) {
+          threatScore = ipRes.data.abuseConfidenceScore;
+          if (threatScore > 50) {
+            isMaliciousIp = true;
+            abuseFlags.push(`Threat Intel: IP reported ${ipRes.data.totalReports} times`);
+          } else {
+             abuseFlags.push('Threat Intel: IP verified clean');
+          }
+        }
+      }
+    } catch (e) {
+      console.log('IP resolution or Threat Intel failed', e);
+    }
+    
     if (!searchReq.ok) {
        throw new Error('API Request Failed');
     }
@@ -26,26 +54,30 @@ export async function scanUrl(url: string) {
 
     if (searchRes.results && searchRes.results.length > 0) {
       const latest = searchRes.results[0];
-      const isMalicious = latest.verdicts?.overall?.malicious || latest.page?.status === 404;
+      const isMalicious = latest.verdicts?.overall?.malicious || latest.page?.status === 404 || isMaliciousIp;
+      const combinedFlags = isMalicious 
+          ? ['Malicious History Detected', 'High Risk Domain', ...abuseFlags] 
+          : ['Domain Verified Safe', ...abuseFlags];
       
       return {
         status: isMalicious ? 'danger' : 'safe',
-        score: isMalicious ? 98 : 12,
-        flags: isMalicious 
-          ? ['Malicious History Detected', 'Blacklisted by urlscan.io', 'High Risk Domain'] 
-          : ['Domain Verified by urlscan.io', 'Clean Scan History'],
-        engine: 'urlscan.io API (LIVE)'
+        score: isMalicious ? Math.max(98, threatScore) : 12,
+        flags: combinedFlags,
+        engine: 'urlscan.io & AbuseIPDB (LIVE)'
       };
     } else {
       // Basic heuristic fallback if domain hasn't been scanned on urlscan yet
-      const isSus = url.toLowerCase().includes('bit.ly') || url.toLowerCase().includes('free') || url.toLowerCase().includes('win');
+      const isSus = url.toLowerCase().includes('bit.ly') || url.toLowerCase().includes('free') || url.toLowerCase().includes('win') || isMaliciousIp;
+      
+      const heuristicFlags = isSus 
+          ? ['High Risk Keyword/IP', ...abuseFlags] 
+          : ['No Malicious History Found', ...abuseFlags];
+          
       return {
         status: isSus ? 'danger' : 'safe',
-        score: isSus ? 85 : 15,
-        flags: isSus 
-          ? ['Unregistered Shortlink/Keyword', 'Unknown to Security Engines'] 
-          : ['No Malicious Reports Found', 'Safe Heuristics'],
-        engine: 'urlscan.io & Heuristics (LIVE)'
+        score: isSus ? Math.max(85, threatScore) : 15,
+        flags: heuristicFlags,
+        engine: 'AbuseIPDB & Heuristics (LIVE)'
       };
     }
   } catch (error) {
